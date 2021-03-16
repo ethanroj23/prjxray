@@ -2,6 +2,7 @@ DB_ROOT ?= ${XRAY_DATABASE_DIR}/${XRAY_DATABASE}
 PART ?= ${XRAY_PART}
 DATABASE ?= build_${PART}/${PART}.db
 WIRE_PATTERNS ?= build_${PART}/wire_patterns.bin
+SHELL = ./report_time.sh
 
 all: build_${PART}/wire_patterns.bin
 
@@ -25,6 +26,11 @@ database: ${DATABASE}
 .PHONY: clean database build_patterns check_patterns print_size
  
 database: ${DATABASE}
+
+python_build_patterns: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
+	python3 build_patterns.py \
+				--database ${DATABASE} \
+				--output_dir build_${PART} \
 
 build_patterns: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
 	python3 print_tile_types.py | \
@@ -63,16 +69,39 @@ check_patterns:
 
 wire_patterns: ${WIRE_PATTERNS}
 
+print_size: 
+	python3 sum_all_patterns.py \
+				--output_dir build_${PART} \
+
 clean:
 	rm -rf build_${PART}
 
 one_pattern: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
 	python3 reduce_graph_for_type.py \
-				--database ${DATABASE} \
-				--output_dir build_${PART} \
-				--node_to_wires \
-				--only_pips \
-				--tile ${TILE} \
+			--database ${DATABASE} \
+			--output_dir build_${PART} \
+			--node_to_wires \
+			--only_pips \
+			--use_gs \
+			--tile ${TILE}
+
+one_pattern_ms: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
+	python3 reduce_graph_for_type.py \
+			--database ${DATABASE} \
+			--output_dir build_${PART} \
+			--node_to_wires \
+			--only_pips \
+			--use_ms \
+			--tile ${TILE}
+
+one_pattern_gs: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
+	python3 reduce_graph_for_type.py \
+			--database ${DATABASE} \
+			--output_dir build_${PART} \
+			--node_to_wires \
+			--only_pips \
+			--use_gs \
+			--tile ${TILE}
 			
 node_to_wires: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
 	python3 reduce_graph_for_type.py \

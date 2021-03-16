@@ -2,13 +2,12 @@
 
 struct CompactArray {
     storage :union {
-        u1  @0 : List(Bool);
-        u8  @1 : List(UInt8);
-        u16 @2 : List(UInt16);
-        u32 @3 : List(UInt32);
-        i8  @4 : List(Int8);
-        i16 @5 : List(Int16);
-        i32 @6 : List(Int32);
+        u8  @0 : List(UInt8);
+        u16 @1 : List(UInt16);
+        u32 @2 : List(UInt32);
+        i8  @3 : List(Int8);
+        i16 @4 : List(Int16);
+        i32 @5 : List(Int32);
     }
 }
 

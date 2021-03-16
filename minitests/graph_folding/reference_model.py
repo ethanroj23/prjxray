@@ -33,8 +33,8 @@ def check_signed_range(min_value, max_value, bits):
 
 
 def get_sentinel(attr):
-    if attr == 'u1':
-        return 2
+    # if attr == 'u1':
+    #     return 2
     if attr == 'u8':
         return 2**8 - 1
     elif attr == 'u16':
@@ -107,9 +107,9 @@ class CompactArray():
 
         if min_value >= 0:
             # Unsigned, saving max room for the sentinel value.
-            if max_value < 2**1:
-                attr = 'u1'
-            elif max_value < 2**8 - 1:
+            # if max_value < 2**1:
+            #     attr = 'u1'
+            if max_value < 2**8 - 1:
                 attr = 'u8'
             elif max_value < 2**16 - 1:
                 attr = 'u16'

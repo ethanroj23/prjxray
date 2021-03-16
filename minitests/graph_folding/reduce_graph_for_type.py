@@ -38,10 +38,8 @@ NodeToWire = namedtuple('NodeToWire', 'wire_in_tile_pkey delta_x delta_y has_pip
 
 all_info = {}
 
-use_ms = True # Determines whether or not you are using the max_shared algorithm
-use_gs = False # Determines whether or not you are using greedy_set cover
 use_prints = {"size_on_disk": False,
-              "printCapnp"  : True,
+              "printCapnp"  : False,
               "printSubgraphNones": False,
               "needed_combinations": False,
               "density": False,
@@ -1027,9 +1025,7 @@ def generate_max_shared_subgraphs(graph):
 
 
 
-def reduce_graph(args, all_edges, graph, tile_type, ms_graphs):
-    global use_ms
-    global use_gs
+def reduce_graph(args, all_edges, graph, tile_type):
     global use_prints
     density = graph.density()
     beta = .5
@@ -1105,7 +1101,7 @@ def reduce_graph(args, all_edges, graph, tile_type, ms_graphs):
     N = math.ceil(N)
 
     required_solutions = {}
-    if use_gs:
+    if args.use_gs:
         found_solutions_time = time.time()
         found_solutions, remaining_edges = find_bsc_par(
             num_workers=40, batch_size=100, graph=graph, N=N, P=P)
@@ -1130,10 +1126,9 @@ def reduce_graph(args, all_edges, graph, tile_type, ms_graphs):
 
     ms_required_solutions = {'wire_to_node': {}, 'node_to_wires':{}}
 
-    if use_ms:
+    if args.use_ms:
         start_time = time.time()
-        ms_required_solutions['wire_to_node'], tile_and_tile_solutions = generate_max_shared_subgraphs(ms_graphs['wire_to_node']) # ESR added this for the max_shared_subgraphs
-        ms_required_solutions['node_to_wires'], tile_and_tile_solutions = generate_max_shared_subgraphs(ms_graphs['node_to_wires']) # ESR added this for the max_shared_subgraphs
+        ms_required_solutions, tile_and_tile_solutions = generate_max_shared_subgraphs(graph) # ESR added this for the max_shared_subgraphs
         if use_prints["ms_runtime"]:
             print(f"Max Shared took {time.time() - start_time} seconds to run")
         #ms_required_solutions.sort()
@@ -1159,7 +1154,7 @@ def reduce_graph(args, all_edges, graph, tile_type, ms_graphs):
     ms_tile_to_tile_patterns = {}
 
     global use_progressbar
-    if use_gs:
+    if args.use_gs:
         iterator = progressbar.progressbar(
                 greed_set_cover_par(num_workers=40,
                                     required_solutions=required_solutions,
@@ -1175,7 +1170,7 @@ def reduce_graph(args, all_edges, graph, tile_type, ms_graphs):
             tile_to_tile_patterns[tile] = tile_pattern
             tile_patterns.add(tile_pattern)
 
-    if use_ms:
+    if args.use_ms:
         for tile in tile_and_tile_solutions:
             solutions_for_tile = tile_and_tile_solutions[tile]
             tile_pattern = set()
@@ -1267,17 +1262,15 @@ def printGraph(graph, msg):
     print("\n")
 
 def main():
-
-    global use_ms
-    global use_gs
     global use_prints
     multiprocessing.set_start_method('spawn')
-    print("this is the file")
     
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--database', required=True)
     parser.add_argument('--tile', required=True)
+    parser.add_argument('--use_gs', action='store_true')
+    parser.add_argument('--use_ms', action='store_true')
     parser.add_argument('--wire_to_node', action='store_true')
     parser.add_argument('--node_to_wires', action='store_true')
     parser.add_argument('--nodes_and_wires', action='store_true')
@@ -1302,6 +1295,9 @@ def main():
     elif not args.wire_to_node and not args.node_to_wires and not args.nodes_and_wires:
         parser.error('Must supply --wire_to_node or --node_to_wires')
 
+    if not args.use_ms and not args.use_gs:
+        parser.error('Must supply a method such as use_ms or use_gs')
+
     def check_file_existence(cur_file):
         return
         if os.path.isfile(cur_file):
@@ -1324,7 +1320,6 @@ def main():
     else:
         assert False
 
-    ms_graphs = {'wire_to_node':get_wire_to_node_graph(args.database, args.tile) , 'node_to_wires':get_node_to_wires_graph(args.database, args.tile, args.only_pips) }
 
     if use_prints["processing_build"]:
         print('Processing {} : {}'.format(args.database, args.tile))
@@ -1334,29 +1329,7 @@ def main():
 
     if len(all_edges) != 0:
         required_solutions, tile_patterns, tile_to_tile_patterns, ms_required_solutions, ms_tile_patterns, ms_tile_to_tile_patterns = reduce_graph(
-            args, all_edges, graph, args.tile, ms_graphs)
-        all_solutions_csv = ''
-        for solution in ms_required_solutions['wire_to_node']:
-            all_solutions_csv += str(solution[0]) + '\n'
-            for idx in range(3):
-                for wire_pattern in solution[1]:
-                    all_solutions_csv += str(wire_pattern[idx]) + ','
-                all_solutions_csv += '\n'
-            all_solutions_csv += '\n'
-        with open("HCLK_CMT_wire_to_node.csv", 'w') as file:
-            file.write(all_solutions_csv)
-
-        all_solutions_csv = ''
-        for solution in ms_required_solutions['node_to_wires']:
-            all_solutions_csv += str(solution[0]) + '\n'
-            for wire_pattern in solution[1]:
-                all_solutions_csv += str(wire_pattern) + ','
-            all_solutions_csv += '\n'
-        with open("HCLK_CMT_node_to_wires.csv", 'w') as file:
-            file.write(all_solutions_csv)
-        print("here")
-
-
+            args, all_edges, graph, args.tile)        
     else:
         required_solutions = set()
         tile_patterns = set()
@@ -1366,39 +1339,38 @@ def main():
         ms_tile_to_tile_patterns = {}
 
     if args.wire_to_node:
-        if use_gs:
+        if args.use_gs:
             gs_size, gs_wire_to_nodes = write_wire_to_node(
                 graph, required_solutions, tile_patterns, tile_to_tile_patterns,
                 args.output_dir, args.tile, 'greedy_set')
-        if use_ms:
+        if args.use_ms:
             ms_size, ms_wire_to_nodes = write_wire_to_node(
                 graph, ms_required_solutions, ms_tile_patterns, ms_tile_to_tile_patterns,
                 args.output_dir, args.tile, 'max_shared')
             
 
     if args.node_to_wires:
-        if use_gs:
+        if args.use_gs:
             gs_size, gs_node_to_wires = write_node_to_wires( 
                 graph, required_solutions, tile_patterns, tile_to_tile_patterns,
                 args.output_dir, args.tile, args.only_pips, 'greedy_set')
-        if use_ms: # if you want to try the max_shared algorithm
+        if args.use_ms: # if you want to try the max_shared algorithm
             ms_size, ms_nodes_and_wires = write_node_to_wires( 
                 graph, ms_required_solutions, ms_tile_patterns, ms_tile_to_tile_patterns, args.output_dir, args.tile, args.only_pips, 'max_shared')
     
     if args.nodes_and_wires:
-        if use_ms: # if you want to try the max_shared algorithm
+        if args.use_ms: # if you want to try the max_shared algorithm
             ms_size, ms_nodes_and_wires = write_nodes_and_wires( 
                 graph, ms_required_solutions, ms_tile_patterns, ms_tile_to_tile_patterns, args.output_dir, args.tile, args.only_pips, 'max_shared')
     
 
-    print("here")
 
 
-    if use_ms:
+    if args.use_ms:
         print(f"ms_size: {ms_size}")
-    if use_gs:
+    if args.use_gs:
         print(f"gs_size: {gs_size}")
-    if use_ms and use_gs:            
+    if args.use_ms and args.use_gs:            
         size_diff = gs_size - ms_size
         
         ms_required_solutions_info = []
@@ -1423,13 +1395,6 @@ def main():
             print(f'{args.tile:20s} greedy_set size better by {abs(size_diff):8d} ({100*size_diff/ms_size:2.2f}%)')
         if size_diff == 0:
             print(f'{args.tile} Sizes were the same')
-
-
-"""
-
-
-"""
-
 
 
 if __name__ == "__main__":
