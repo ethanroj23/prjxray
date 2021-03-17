@@ -103,6 +103,32 @@ one_pattern_gs: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py referenc
 			--use_gs \
 			--tile ${TILE}
 			
+node_to_pip_wires_gs: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
+	python3 reduce_graph_for_type.py \
+			--database ${DATABASE} \
+			--output_dir build_${PART} \
+			--node_to_wires \
+			--only_pips \
+			--use_gs \
+			--tile ${TILE}
+
+node_to_wires_gs: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
+	python3 reduce_graph_for_type.py \
+			--database ${DATABASE} \
+			--output_dir build_${PART} \
+			--node_to_wires \
+			--use_gs \
+			--tile ${TILE}
+
+wire_to_node_gs: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
+	python3 reduce_graph_for_type.py \
+			--database ${DATABASE} \
+			--output_dir build_${PART} \
+			--wire_to_node \
+			--use_gs \
+			--tile ${TILE}
+
+
 node_to_wires: ${DATABASE} reduce_graph_for_type.py distributed_bsc.py reference_model.py
 	python3 reduce_graph_for_type.py \
 				--database ${DATABASE} \
