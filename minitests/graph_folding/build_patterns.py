@@ -51,25 +51,10 @@ def main():
 
 
     for num, row in enumerate(all_tile_types):
-        for direction in ['node_to_wires_gs', 'node_to_pip_wires_gs', 'wire_to_node_gs']:
+        for direction in ['node_to_wires_ms', 'node_to_pip_wires_ms', 'wire_to_node_ms']:
             tile_type = row[0]
             print(f'\n{num}. Working on: {tile_type} {direction}')
             subprocess.check_output(['make', direction, f'TILE={tile_type}'])
-
-
-
-    # sys.argv.append('--node_to_wires')
-    # sys.argv.append('--use_ms')
-    # sys.argv.append('--set_start_method')
-    # for num, row in enumerate(all_tile_types):
-    #     tile_type = row[0]
-    #     print(f'\n{num}. Working on: {tile_type}')
-    #     sys.argv.append(f'--tile={tile_type}')
-    #     reduce_graph_for_type.main()
-    #     sys.argv.remove(f'--tile={tile_type}')
-    #     if '--set_start_method' in sys.argv:
-    #         sys.argv.remove('--set_start_method')
-
 
     return
 
