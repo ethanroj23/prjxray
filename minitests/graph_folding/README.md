@@ -16,6 +16,11 @@ In order to achieve a better result, this time I will keep track certain values 
 I will record my results below.
 
 3.12.21
+<!---
+#############################################################################
+######################  Greedy Set Cover  ###################################
+#############################################################################
+-->
 # Greedy Set Cover (Initial Approach)
 
 ## File Size on Disk:
@@ -25,6 +30,7 @@ I will record my results below.
 | Wire to nodes (128)  | 3.73MB  |
 | Node to wires (128)  | 6.52MB  |
 | Node to pip wires (128)  | 1.10MB  |  
+| Total  | 11.35MB |  
 
 <br/>
 
@@ -52,7 +58,11 @@ I will record my results below.
 | Node to pip wires| 10| INT_L  |
 
 <br/>
-
+<!---
+#############################################################################
+######################  Max Shared (old capnp)  #############################
+#############################################################################
+-->
 # Max Shared
 
 ## File Size on Disk:
@@ -62,6 +72,7 @@ I will record my results below.
 | Wire to nodes (128)  | 4.60MB  |
 | Node to wires (128)  | 6.86MB  |
 | Node to pip wires (128)  | 1.27MB  |  
+| Total  | 12.73MB  |  
 
 <br/>
 
@@ -78,6 +89,47 @@ I will record my results below.
 216inputs+0outputs (0major+87040minor)pagefaults 0swaps
 -->
 
+
+<br/>
+
+## Largest # of Subgraphs (for all tiles)
+| Direction  | Max # of Subgraphs | Tile Type |
+| ------------- | ------------- | ----- |
+| Wire to nodes| 25 | INT_R |
+| Node to wires| 76 | INT_R |
+| Node to pip wires| 29 | INT_R  |
+
+
+<br/>
+
+
+<!---
+#############################################################################
+######################  Max Shared New Capnp  ###############################
+#############################################################################
+-->
+# Max Shared New Capnp
+
+## File Size on Disk:
+
+| Direction  | Size |
+| ------------- | ------------- |
+| Wire to nodes (128)  | 2.63MB  |
+| Node to wires (128)  | 7.26MB  |
+| Node to pip wires (128)  | 1.33MB  |  
+| Total  | 11.22MB  |  
+
+
+<br/>
+
+## Time taken to create all the files:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 7 minutes 28 seconds
+
+<br/>
+
+## Time it takes to access the data structure and query every wire.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 minute 28 seconds................
 
 <br/>
 

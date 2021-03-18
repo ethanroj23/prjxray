@@ -2,36 +2,51 @@
 
 struct CompactArray {
     storage :union {
-        u1  @0 : List(Bool);
-        u8  @1 : List(UInt8);
-        u16 @2 : List(UInt16);
-        u32 @3 : List(UInt32);
-        i8  @4 : List(Int8);
-        i16 @5 : List(Int16);
-        i32 @6 : List(Int32);
+        u8  @0 : List(UInt8);
+        u16 @1 : List(UInt16);
+        u32 @2 : List(UInt32);
+        i8  @3 : List(Int8);
+        i16 @4 : List(Int16);
+        i32 @5 : List(Int32);
     }
 }
 
+struct WireToNodeStorage {
+    # Storage of wire -> node patterns
+    nodePatternDx         @0 : CompactArray;
+    nodePatternDy         @1 : CompactArray;
+    nodePatternToNodeWire @2 : CompactArray;
+
+    # Storage of subgraph to wire
+    subgraphs             @3 : List(CompactArray);
+
+    nodePatterns        @4 : List(CompactArray);
 
 
-struct NodesAndWiresStorage {
-    #nodePatterns was removed from litghost's representation
-    # Id of node wire in tile pkey
-    nodeWireInTilePkeys @0 : CompactArray; # This is the starting node pkey (indexes to these pkeys are found in subgraphs)
-
-    # Storage of node -> wire patterns (The index of dx, dy, and patternToWire are aligned with the subgraph index)
-    wirePatternDx       @1 : List(CompactArray); 
-    wirePatternDy       @2 : List(CompactArray);
-    wirePatternToWire   @3 : List(CompactArray);
-    hasPip              @4 : List(CompactArray); # one list for each subgraph
-
-    # Storage of subgraph to nodeWireInTilePkey
-    subgraphs           @5 : List(CompactArray);
-
-    # All of the below data structures are the same as in graph_storage.capnp
     # Tile patterns
-    tilePatterns        @6 : List(CompactArray);
+    tilePatterns          @5 : List(CompactArray);
 
-    tilePkeys           @7 : CompactArray;
-    tileToTilePatterns  @8 : CompactArray;
+    tilePkeys             @6 : CompactArray;
+    tileToTilePatterns    @7 : CompactArray;
+}
+
+struct NodeToWiresStorage {
+    # Storage of node -> wire patterns
+    wirePatternDx       @0 : CompactArray; # all of the dxs (index lines up with index of nodeWireInTilePkeys maybe)
+    wirePatternDy       @1 : CompactArray; # all of the dys
+    wirePatternToWire   @2 : CompactArray; # all of the wirePattern Ending Wire pkeys
+
+    # up to this point, the data is represented in the smallest possible representation
+
+    # Storage of node to wire pattern lists. (index lines up with subgraphs)
+    wirePatterns        @3 : List(CompactArray);
+
+    # Storage of subgraph to node Subgraph contains starting_node_pkey
+    subgraphs           @4 : List(CompactArray);
+
+    # Tile patterns
+    tilePatterns        @5 : List(CompactArray);
+
+    tilePkeys           @6 : CompactArray;
+    tileToTilePatterns  @7 : CompactArray;
 }
