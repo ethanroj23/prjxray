@@ -550,18 +550,19 @@ def write_node_to_wires(
         subgraphs = []
         ms_wirePatterns = []
         subgraphs_null_count = []
-
+        max_wire_pattern_idx = 0
         for tile_pkeys, node_patterns in required_solutions:
             subgraph = CompactArray()
             subgraph.init_items(0)
             ms_wirePattern = CompactArray()
-            ms_wirePattern.init_items(len(node_wire_in_tile_pkeys))
+            ms_wirePattern.init_items(0)
 
             for node_wire_in_tile_pkey, node_patterns in node_patterns: # these are the vs (node_patterns)
                 idx = node_wire_in_tile_pkeys_array.index(node_wire_in_tile_pkey)
                 if node_patterns_to_idx[node_patterns] is not None:
                     subgraph.items.append(node_wire_in_tile_pkey)
                     ms_wirePattern.items.append(node_patterns_to_idx[node_patterns])
+                max_wire_pattern_idx = node_patterns_to_idx[node_patterns] if node_patterns_to_idx[node_patterns] > max_wire_pattern_idx else max_wire_pattern_idx
 
 
             null_count = 0
@@ -641,6 +642,9 @@ def write_node_to_wires(
         tile_to_tile_patterns.write_to_capnp(
             (gs_node_to_wires.tilePkeys, gs_node_to_wires.tileToTilePatterns))
         
+        print(f"node_patterns_data: {len(node_patterns_data)} and max_wire_pattern {max_wire_pattern_idx+1}")
+        if (len(node_patterns_data)):
+            assert len(node_patterns_data) == max_wire_pattern_idx+1
         final_node_to_wires = gs_node_to_wires
 
 
