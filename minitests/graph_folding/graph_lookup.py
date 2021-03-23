@@ -17,9 +17,15 @@ class WireToNodeLookup():
         with open(wire_to_node_patterns_fname, 'rb') as f:
             self.wire_to_node_capnp = schema.WireToNodeStorage.read(f)
 
-        self.wire_in_tile_pkeys = CompactArray()
-        self.wire_in_tile_pkeys.read_from_capnp(
-            self.wire_to_node_capnp.wireInTilePkeys)
+        # self.wire_in_tile_pkeys = CompactArray()
+        # self.wire_in_tile_pkeys.read_from_capnp(
+        #     self.wire_to_node_capnp.wireInTilePkeys)
+
+        self.wire_in_tile_pkeys = []
+        for wire_in_tile_pkeys_capnp in self.wire_to_node_capnp.wireInTilePkeys:
+            wire_in_tile_pkey = CompactArray()
+            wire_in_tile_pkey.read_from_capnp(wire_in_tile_pkeys_capnp)
+            self.wire_in_tile_pkeys.append(wire_in_tile_pkey)
 
         self.node_pattern_dx = CompactArray()
         self.node_pattern_dx.read_from_capnp(
@@ -43,11 +49,11 @@ class WireToNodeLookup():
             subgraph = CompactArray()
             subgraph.read_from_capnp(subgraph_capnp)
 
-            for pattern_idx in subgraph.items:
-                if pattern_idx is not None:
-                    assert pattern_idx < len(self.node_pattern_dx.items)
+            # for pattern_idx in subgraph.items:
+            #     if pattern_idx is not None:
+            #         assert pattern_idx < len(self.node_pattern_dx.items)
 
-            assert len(subgraph.items) == len(self.wire_in_tile_pkeys.items)
+            #assert len(subgraph.items) == len(self.wire_in_tile_pkeys.items)
 
             self.subgraphs.append(subgraph)
 
@@ -77,9 +83,12 @@ class WireToNodeLookup():
             self.tile_to_tile_patterns[tile_pkey] = tile_pattern_idx
 
     def get_node(self, tile_pkey, x, y, wire_in_tile_pkey):
-        wire_idx = self.wire_in_tile_pkeys.index_get(wire_in_tile_pkey, None)
-        if wire_idx is None:
-            # This is already the node!
+        # wire_idx = self.wire_in_tile_pkeys.index_get(wire_in_tile_pkey, None)
+        # if wire_idx is None:
+        #     # This is already the node!
+        #     return x, y, wire_in_tile_pkey
+
+        if len(self.tile_to_tile_patterns) == 0:
             return x, y, wire_in_tile_pkey
 
         tile_pattern_idx = self.tile_to_tile_patterns[tile_pkey]
@@ -89,8 +98,9 @@ class WireToNodeLookup():
         for subgraph_idx in tile_pattern.items:
             subgraph = self.subgraphs[subgraph_idx]
 
-            if subgraph.items[wire_idx] is not None:
-                node_pattern_idx = subgraph.items[wire_idx]
+            if  wire_in_tile_pkey in self.wire_in_tile_pkeys[subgraph_idx].items: #subgraph.items[wire_idx] is not None:
+                # node_pattern_idx = subgraph.items[wire_idx]
+                node_pattern_idx = subgraph.items[self.wire_in_tile_pkeys[subgraph_idx].items.index(wire_in_tile_pkey)]
                 break
 
         if node_pattern_idx is None:
@@ -110,9 +120,17 @@ class NodeToWiresLookup():
         with open(node_to_wires_fname, 'rb') as f:
             self.node_to_wires_capnp = schema.NodeToWiresStorage.read(f)
 
-        self.node_wire_in_tile_pkeys = CompactArray()
-        self.node_wire_in_tile_pkeys.read_from_capnp(
-            self.node_to_wires_capnp.nodeWireInTilePkeys)
+        # self.node_wire_in_tile_pkeys = CompactArray()
+        # self.node_wire_in_tile_pkeys.read_from_capnp(
+        #     self.node_to_wires_capnp.nodeWireInTilePkeys)
+
+        self.node_wire_in_tile_pkeys = []
+        for node_wire_in_tile_pkeys_capnp in self.node_to_wires_capnp.nodeWireInTilePkeys:
+            node_wire_in_tile_pkey = CompactArray()
+            node_wire_in_tile_pkey.read_from_capnp(node_wire_in_tile_pkeys_capnp)
+            self.node_wire_in_tile_pkeys.append(node_wire_in_tile_pkey)
+
+
 
         self.wire_pattern_dx = CompactArray()
         self.wire_pattern_dx.read_from_capnp(
@@ -145,14 +163,6 @@ class NodeToWiresLookup():
         for subgraph_capnp in self.node_to_wires_capnp.subgraphs:
             subgraph = CompactArray()
             subgraph.read_from_capnp(subgraph_capnp)
-
-            for node_pattern_idx in subgraph.items:
-                if node_pattern_idx is not None:
-                    assert node_pattern_idx < len(self.node_patterns)
-
-            assert len(subgraph.items) == len(
-                self.node_wire_in_tile_pkeys.items)
-
             self.subgraphs.append(subgraph)
 
         self.tile_patterns = []
@@ -183,12 +193,14 @@ class NodeToWiresLookup():
     def get_wires_for_node(self, tile_pkey, x, y, node_wire_in_tile_pkey):
         yield (x, y, node_wire_in_tile_pkey)
 
-        node_wire_idx = self.node_wire_in_tile_pkeys.index_get(
-            node_wire_in_tile_pkey, None)
-        if node_wire_idx is None:
-            # This node is only itself!
-            return
+        # node_wire_idx = self.node_wire_in_tile_pkeys.index_get(
+        #     node_wire_in_tile_pkey, None)
+        # if node_wire_idx is None:
+        #     # This node is only itself!
+        #     return
 
+        if len(self.tile_to_tile_patterns) == 0:
+            return
         tile_pattern_idx = self.tile_to_tile_patterns[tile_pkey]
         tile_pattern = self.tile_patterns[tile_pattern_idx]
 
@@ -196,8 +208,9 @@ class NodeToWiresLookup():
         for subgraph_idx in tile_pattern.items:
             subgraph = self.subgraphs[subgraph_idx]
 
-            if subgraph.items[node_wire_idx] is not None:
-                node_pattern_idx = subgraph.items[node_wire_idx]
+            if  node_wire_in_tile_pkey in self.node_wire_in_tile_pkeys[subgraph_idx].items: #subgraph.items[node_wire_idx] is not None:
+                #node_pattern_idx = subgraph.items[node_wire_idx]
+                node_pattern_idx = subgraph.items[self.node_wire_in_tile_pkeys[subgraph_idx].items.index(node_wire_in_tile_pkey)]
                 break
 
         if node_pattern_idx is None:
@@ -205,6 +218,7 @@ class NodeToWiresLookup():
             return
 
         for wire_pattern_idx in self.node_patterns[node_pattern_idx].items:
+        #for wire_pattern_idx in self.subgraphs[subgraph_idx].items[node_pattern_idx]:
             wire_x = x + self.wire_pattern_dx.items[wire_pattern_idx]
             wire_y = y + self.wire_pattern_dy.items[wire_pattern_idx]
             wire_in_tile_pkey = self.wire_pattern_to_wire.items[

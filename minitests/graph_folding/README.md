@@ -91,6 +91,41 @@ I will record my results below.
 <br/>
 
 
+# new capnp (just node to wires adjusted)
+
+## File Size on Disk:
+
+| Direction  | Size |
+| ------------- | ------------- |
+| Wire to nodes (128)  | 4.60MB  |
+| Node to wires (128)  | 5.06MB  |
+| Node to pip wires (128)  | 0.98MB  |  
+
+## Time it takes to access the data structure and query every wire.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 minute 26 seconds. 
+
+
+# new capnp (both adjusted adjusted)
+
+## File Size on Disk:
+
+| Direction  | Size |
+| ------------- | ------------- |
+| Wire to nodes (128)  | 2.63MB  |
+| Node to wires (128)  | 5.06MB  |
+| Node to pip wires (128)  | 0.98MB  |  
+
+## Time it takes to access the data structure and query every wire.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2 minute 25 seconds. 
+
+Time it takes to access the data structure and query every wire. (Not including database load time)
+2.0163258723333333 minutes
+
+# DIRECT 
+I will do this next...
+
+
+
 # To-Do  
 Determine #tiles per subgraph number
 

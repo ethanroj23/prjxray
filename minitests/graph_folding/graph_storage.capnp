@@ -12,7 +12,9 @@ struct CompactArray {
 }
 
 struct WireToNodeStorage {
-    wireInTilePkeys       @0 : CompactArray;
+        #adjust nodeWireInTilePkeys to line up with subgraphs
+
+    wireInTilePkeys       @0 : List(CompactArray);
 
     # Storage of wire -> node patterns
     nodePatternDx         @1 : CompactArray;
@@ -31,7 +33,8 @@ struct WireToNodeStorage {
 
 struct NodeToWiresStorage {
     # Id of node wire in tile pkey
-    nodeWireInTilePkeys @0 : CompactArray; # This is a list of all of the starting_wire_in_tile_pkeys (order matters)
+    #adjust nodeWireInTilePkeys to line up with subgraphs
+    nodeWireInTilePkeys @0 : List(CompactArray); # This is a list of all of the starting_wire_in_tile_pkeys (order matters)
                                            # Values are stored as a CompactArray 
     # Storage of node -> wire patterns
     wirePatternDx       @1 : CompactArray; # all of the dxs (index lines up with index of nodeWireInTilePkeys maybe)
