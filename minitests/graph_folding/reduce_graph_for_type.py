@@ -478,7 +478,7 @@ def write_node_to_wires(
         final_node_to_wires = gs_node_to_wires
 
 
-    if cover_method == 'max_shared':
+    if cover_method == 'dont_do_this':
         ms_graph_storage_schema = capnp.load('max_shared_storage.capnp')
         ms_nodes_and_wires = ms_graph_storage_schema.NodesAndWiresStorage.new_message()
 
@@ -981,7 +981,7 @@ def generate_max_shared_subgraphs(graph):
 
     # Find the total number of required subgraphs (Maybe use pandas here later)
     all_tiles = {}
-    for v_idx in range(total_number_of_vs-1): # for every column
+    for v_idx in range(total_number_of_vs): # for every column
         cur_u_combination = bitarray()
         cur_tiles_in_subgraph = [] # this will represent the u's in the subgraph
         # cur_patterns_in_subgraph = {} # this will represent the v's in the subgraph
