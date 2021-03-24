@@ -352,7 +352,7 @@ def write_node_to_wires(
         else:
             print(f"                        {tile_type}     Node to wires   {cover_method}")
 
-    if cover_method == 'greedy_set':
+    if cover_method == 'max_shared':
         node_wire_in_tile_pkeys = set()
         all_wire_patterns = set()
 
