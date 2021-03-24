@@ -296,7 +296,6 @@ def write_wire_to_node(
     tile_to_tile_patterns = StructOfArray(
         'TileToTilePatterns', ('tile_pkey', 'tile_pattern_index'))
     tile_to_tile_patterns.set_items(sorted(tile_to_tile_patterns_data))
-
     graph_storage_schema = capnp.load('graph_storage.capnp')
     wire_to_nodes = graph_storage_schema.WireToNodeStorage.new_message()
 
@@ -574,7 +573,7 @@ def write_nodes_and_wires(
             print(f"                        {tile_type}     Node to wires   {cover_method}")
 
     if cover_method == 'max_shared':
-        ms_graph_storage_schema = capnp.load('max_shared_storage.capnp')
+        ms_graph_storage_schema = capnp.load('graph_storage.capnp')
         ms_nodes_and_wires = ms_graph_storage_schema.NodesAndWiresStorage.new_message()
 
         # get tilePkeys

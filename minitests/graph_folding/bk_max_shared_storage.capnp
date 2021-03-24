@@ -2,7 +2,7 @@
 
 struct CompactArray {
     storage :union {
-        u1  @0 : List(Bool);
+        #u1  @0 : List(Bool);
         u8  @1 : List(UInt8);
         u16 @2 : List(UInt16);
         u32 @3 : List(UInt32);
