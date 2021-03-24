@@ -67,6 +67,11 @@ check_patterns:
 		--database ${DATABASE} \
 		--output_dir build_${PART}/
 
+performance_test:
+	/usr/bin/time -v python3 performance_test.py \
+		--database ${DATABASE} \
+		--output_dir build_${PART}/
+
 wire_patterns: ${WIRE_PATTERNS}
 
 print_size: 
