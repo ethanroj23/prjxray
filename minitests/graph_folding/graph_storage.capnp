@@ -12,26 +12,22 @@ struct CompactArray {
 }
 
 struct WireToNodeStorage {
-    wireInTilePkeys       @0 : CompactArray;
+    wireInTilePkeys       @0 : List(CompactArray);
 
     # Storage of wire -> node patterns
     nodePatternDx         @1 : CompactArray;
     nodePatternDy         @2 : CompactArray;
     nodePatternToNodeWire @3 : CompactArray;
 
-    # Storage of subgraph to wire
-    subgraphs             @4 : List(CompactArray);
+    keysToPattern         @4 : List(CompactArray);
 
     # Tile patterns
-    tilePatterns          @5 : List(CompactArray);
-
-    tilePkeys             @6 : CompactArray;
-    tileToTilePatterns    @7 : CompactArray;
+    tilePkeys             @5 : CompactArray;
 }
 
 struct NodeToWiresStorage {
     # Id of node wire in tile pkey
-    nodeWireInTilePkeys @0 : CompactArray; # This is a list of all of the starting_wire_in_tile_pkeys (order matters)
+    nodeWireInTilePkeys @0 : List(CompactArray); # This is a list of all of the starting_wire_in_tile_pkeys (order matters)
                                            # Values are stored as a CompactArray 
     # Storage of node -> wire patterns
     wirePatternDx       @1 : CompactArray; # all of the dxs (index lines up with index of nodeWireInTilePkeys maybe)
@@ -39,16 +35,10 @@ struct NodeToWiresStorage {
     wirePatternToWire   @3 : CompactArray; # all of the wirePattern Ending Wire pkeys
 
     # up to this point, the data is represented in the smallest possible representation
-
+    keysToPatterns      @4 : List(CompactArray);
     # Storage of node to wire pattern lists.
-    nodePatterns        @4 : List(CompactArray);
-
-    # Storage of subgraph to node
-    subgraphs           @5 : List(CompactArray);
+    nodePatterns        @5 : List(CompactArray);
 
     # Tile patterns
-    tilePatterns        @6 : List(CompactArray);
-
-    tilePkeys           @7 : CompactArray;
-    tileToTilePatterns  @8 : CompactArray;
+    tilePkeys           @6 : CompactArray;
 }

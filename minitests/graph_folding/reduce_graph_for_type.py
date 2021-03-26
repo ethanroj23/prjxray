@@ -210,11 +210,33 @@ def write_wire_to_node(
     wire_in_tile_pkeys = set()
     all_node_patterns = set()
 
-    for pattern in graph.v:
+
+
+    wireInTilePkeys = []
+    keysToPattern = []
+    tile_pkeys = CompactArray()
+    tile_pkeys.init_items(0)
+
+    for tile_wire_in_tile_pkeys in range(len(graph.u)): # append empty CompactArray for each tile into wireInTilePkeys
+        wire_in_tile_pkeys_for_tile = CompactArray()
+        wire_in_tile_pkeys_for_tile.init_items(0)
+        wireInTilePkeys.append(wire_in_tile_pkeys_for_tile)
+        keys_to_pattern_for_tile = CompactArray()
+        keys_to_pattern_for_tile.init_items(0)
+        keysToPattern.append(keys_to_pattern_for_tile)
+        tile_pkeys.items.append(graph.u[tile_wire_in_tile_pkeys].tile_pkey)
+
+    for idx, pattern in enumerate(graph.v):
         wire_in_tile_pkeys.add(pattern.wire_in_tile_pkey)
         all_node_patterns.add(
             (pattern.delta_x, pattern.delta_y, pattern.node_wire_in_tile_pkey))
-
+        
+    for tile_idx, patterns in enumerate(graph.u_to_v):
+        for v_idx, v_exists in enumerate(patterns):
+            if v_exists:
+                wireInTilePkeys[tile_idx].items.append(graph.v[v_idx].wire_in_tile_pkey)
+                keysToPattern[tile_idx].items.append(graph.vj_to_idx[graph.v[v_idx]])
+                
     wire_in_tile_pkeys_data = CompactArray()
     wire_in_tile_pkeys_data.set_items(sorted(wire_in_tile_pkeys))
 
@@ -289,11 +311,12 @@ def write_wire_to_node(
         'TileToTilePatterns', ('tile_pkey', 'tile_pattern_index'))
     tile_to_tile_patterns.set_items(sorted(tile_to_tile_patterns_data))
 
+
+
     graph_storage_schema = capnp.load('graph_storage.capnp')
-    ms_graph_storage_schema = capnp.load('max_shared_storage.capnp')
     wire_to_nodes = graph_storage_schema.WireToNodeStorage.new_message()
 
-    wire_in_tile_pkeys_data.write_to_capnp(wire_to_nodes.wireInTilePkeys)
+    # wire_in_tile_pkeys_data.write_to_capnp(wire_to_nodes.wireInTilePkeys)
     node_patterns.write_to_capnp(
         (
             wire_to_nodes.nodePatternDx,
@@ -301,18 +324,33 @@ def write_wire_to_node(
             wire_to_nodes.nodePatternToNodeWire,
         ))
 
-    subgraphs_capnp = wire_to_nodes.init('subgraphs', len(subgraphs))
-    for subgraph_capnp, subgraph in zip(subgraphs_capnp, subgraphs):
-        subgraph.write_to_capnp(subgraph_capnp)
 
-    tile_patterns_capnp = wire_to_nodes.init(
-        'tilePatterns', len(tile_patterns_data))
-    for tile_pattern_capnp, tile_pattern in zip(tile_patterns_capnp,
-                                                tile_patterns_data):
-        tile_pattern.write_to_capnp(tile_pattern_capnp)
 
-    tile_to_tile_patterns.write_to_capnp(
-        (wire_to_nodes.tilePkeys, wire_to_nodes.tileToTilePatterns))
+    keys_to_pattern_capnp = wire_to_nodes.init('keysToPattern', len(keysToPattern))
+    for key_to_pattern_capnp, key_to_pattern in zip(keys_to_pattern_capnp, keysToPattern):
+        key_to_pattern.write_to_capnp(key_to_pattern_capnp)
+
+    wire_in_tile_pkeys_capnp = wire_to_nodes.init('wireInTilePkeys', len(wireInTilePkeys))
+    for wire_in_tile_pkey_capnp, wire_in_tile_pkey in zip(wire_in_tile_pkeys_capnp, wireInTilePkeys):
+        wire_in_tile_pkey.write_to_capnp(wire_in_tile_pkey_capnp)
+
+        # write nodeWireInTilePkeys
+        tile_pkeys.write_to_capnp(
+            wire_to_nodes.tilePkeys)
+
+
+    # subgraphs_capnp = wire_to_nodes.init('subgraphs', len(subgraphs))
+    # for subgraph_capnp, subgraph in zip(subgraphs_capnp, subgraphs):
+    #     subgraph.write_to_capnp(subgraph_capnp)
+
+    # tile_patterns_capnp = wire_to_nodes.init(
+    #     'tilePatterns', len(tile_patterns_data))
+    # for tile_pattern_capnp, tile_pattern in zip(tile_patterns_capnp,
+    #                                             tile_patterns_data):
+    #     tile_pattern.write_to_capnp(tile_pattern_capnp)
+
+    # tile_to_tile_patterns.write_to_capnp(
+    #     (wire_to_nodes.tilePkeys, wire_to_nodes.tileToTilePatterns))
 
     serialized = wire_to_nodes.to_bytes()
     print('Size on disk: ', len(serialized))
@@ -368,6 +406,34 @@ def write_node_to_wires(
                 all_wire_patterns.add( # once this for loop is done, all_wire_patterns will have every pattern in it
                     (pattern.delta_x, pattern.delta_y, pattern.wire_in_tile_pkey))
 
+
+        nodeWireInTilePkeys = []
+        keysToPatterns = []
+        atile_pkeys = CompactArray()
+        atile_pkeys.init_items(0)
+        
+        for tile_wire_in_tile_pkeys in range(len(graph.u)): # append empty CompactArray for each tile into nodeWireInTilePkeys
+            node_wire_in_tile_pkeys_for_tile = CompactArray()
+            node_wire_in_tile_pkeys_for_tile.init_items(0)
+            nodeWireInTilePkeys.append(node_wire_in_tile_pkeys_for_tile)
+            keys_to_patterns_for_tile = CompactArray()
+            keys_to_patterns_for_tile.init_items(0)
+            keysToPatterns.append(keys_to_patterns_for_tile)
+            atile_pkeys.items.append(graph.u[tile_wire_in_tile_pkeys].tile_pkey)
+
+            
+        for tile_idx, patterns in enumerate(graph.u_to_v):
+            for v_idx, v_exists in enumerate(patterns):
+                if v_exists:
+                    nodeWireInTilePkeys[tile_idx].items.append(graph.v[v_idx][0])
+                    keysToPatterns[tile_idx].items.append(graph.vj_to_idx[graph.v[v_idx]])
+
+
+
+
+
+
+
         node_wire_in_tile_pkeys_array = CompactArray()
         node_wire_in_tile_pkeys_array.set_items(sorted(node_wire_in_tile_pkeys))
 
@@ -394,6 +460,11 @@ def write_node_to_wires(
                     node_patterns.append(wire_patterns.index(key))
                 node_patterns_data[-1].set_items(sorted(node_patterns))
 
+
+        
+
+
+
         subgraphs = []
         subgraphs_null_count = []
 
@@ -413,6 +484,11 @@ def write_node_to_wires(
             # subgraph.items = list(filter((None).__ne__, subgraph.items))# use this line to get smaller files by removing the null items
             subgraphs.append(subgraph)
             subgraphs_null_count.append(null_count)
+
+
+
+
+
 
         print(f'{cover_method} null count: {subgraphs_null_count}')
         tile_patterns_data = []
@@ -436,11 +512,26 @@ def write_node_to_wires(
         tile_to_tile_patterns.set_items(sorted(tile_to_tile_patterns_data))
 
 
+        keys_to_patterns_capnp = gs_node_to_wires.init('keysToPatterns', len(keysToPatterns))
+        for key_to_patterns_capnp, key_to_patterns in zip(keys_to_patterns_capnp, keysToPatterns):
+            key_to_patterns.write_to_capnp(key_to_patterns_capnp)
 
+        wire_in_tile_pkeys_capnp = gs_node_to_wires.init('nodeWireInTilePkeys', len(nodeWireInTilePkeys))
+        for wire_in_tile_pkey_capnp, wire_in_tile_pkey in zip(wire_in_tile_pkeys_capnp, nodeWireInTilePkeys):
+            wire_in_tile_pkey.write_to_capnp(wire_in_tile_pkey_capnp)
 
         # write nodeWireInTilePkeys
-        node_wire_in_tile_pkeys_array.write_to_capnp(
-            gs_node_to_wires.nodeWireInTilePkeys)
+        atile_pkeys.write_to_capnp(
+            gs_node_to_wires.tilePkeys)
+
+
+
+
+
+
+        # # write nodeWireInTilePkeys
+        # node_wire_in_tile_pkeys_array.write_to_capnp(
+        #     gs_node_to_wires.nodeWireInTilePkeys)
 
         # write wirePatternDx, wirePatternDy, wirePatternToWire
         wire_patterns.write_to_capnp(
@@ -458,22 +549,22 @@ def write_node_to_wires(
                                                     node_patterns_data):
             node_pattern.write_to_capnp(node_pattern_capnp)
         # init subgraphs list
-        subgraphs_capnp = gs_node_to_wires.init('subgraphs', len(subgraphs))
-        # write subgraphs
-        for subgraph_capnp, subgraph in zip(subgraphs_capnp, subgraphs):
-            subgraph.write_to_capnp(subgraph_capnp)
+        # subgraphs_capnp = gs_node_to_wires.init('subgraphs', len(subgraphs))
+        # # write subgraphs
+        # for subgraph_capnp, subgraph in zip(subgraphs_capnp, subgraphs):
+        #     subgraph.write_to_capnp(subgraph_capnp)
 
         # init tilePatterns list
-        tile_patterns_capnp = gs_node_to_wires.init(
-            'tilePatterns', len(tile_patterns_data))
-        # write tilePatterns
-        for tile_pattern_capnp, tile_pattern in zip(tile_patterns_capnp,
-                                                    tile_patterns_data):
-            tile_pattern.write_to_capnp(tile_pattern_capnp)
+        # tile_patterns_capnp = gs_node_to_wires.init(
+        #     'tilePatterns', len(tile_patterns_data))
+        # # write tilePatterns
+        # for tile_pattern_capnp, tile_pattern in zip(tile_patterns_capnp,
+        #                                             tile_patterns_data):
+        #     tile_pattern.write_to_capnp(tile_pattern_capnp)
 
-        # write tileToTilePatterns
-        tile_to_tile_patterns.write_to_capnp(
-            (gs_node_to_wires.tilePkeys, gs_node_to_wires.tileToTilePatterns))
+        # # write tileToTilePatterns
+        # tile_to_tile_patterns.write_to_capnp(
+        #     (gs_node_to_wires.tilePkeys, gs_node_to_wires.tileToTilePatterns))
         
         final_node_to_wires = gs_node_to_wires
 
