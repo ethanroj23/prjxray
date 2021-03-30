@@ -1533,6 +1533,18 @@ def main():
         ms_tile_patterns = set()
         ms_tile_to_tile_patterns = {}
 
+    print("Getting stats about required solution")
+    matches = set()
+    for idx_1 in range(len(graph.u_to_v)):
+        for idx_2 in range(len(graph.u_to_v)):
+            if graph.u_to_v[idx_1] == graph.u_to_v[idx_2] and idx_1 != idx_2:
+                matches.add(idx_2)
+    f = open("sugraphs_match.txt", "a")
+    f.write(f"{tile_type}[W2N] Tiles with same subgraph: {len(matches)} of {len(graph.u_to_v)} tiles\n")
+    f.close()
+    exit()
+    
+
     if args.wire_to_node:
         if args.use_gs:
             gs_size, gs_wire_to_nodes = write_wire_to_node(

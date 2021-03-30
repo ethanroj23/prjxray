@@ -167,3 +167,4 @@ Determine #tiles per subgraph number
 
 How many wires are in each tile?
 Percentage of total wires in each tile type?
+Number of subgraphs for each tile.
