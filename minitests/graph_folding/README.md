@@ -146,5 +146,24 @@ I will record my results below.
 # To-Do  
 Determine #tiles per subgraph number
 
+<!---
+#############################################################################
+######################  Max Shared New Capnp (with every pkey in place)  ###############################
+#############################################################################
+-->
+# Max Shared New Capnp
+
+## File Size on Disk:
+
+| Direction  | Size |
+| ------------- | ------------- |
+| Wire to nodes (128)  | 2.63MB  |
+| Node to wires (128)  | 5.06MB  |
+| Node to pip wires (128)  | 0.97MB  |  
+| Total  | 8.66MB  |  
 
 
+
+
+How many wires are in each tile?
+Percentage of total wires in each tile type?

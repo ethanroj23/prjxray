@@ -204,6 +204,18 @@ def write_wire_to_node(
         output_dir, tile_type, cover_method):
     global use_prints
     
+
+    matches = set()
+    for idx_1 in range(len(graph.u_to_v)):
+        for idx_2 in range(len(graph.u_to_v)):
+            if graph.u_to_v[idx_1] == graph.u_to_v[idx_2] and idx_1 != idx_2:
+                matches.add(idx_2)
+    f = open("sugraphs_match.txt", "a")
+    f.write(f"{tile_type}[W2N] Tiles with same subgraph: {len(matches)} of {len(graph.u_to_v)} tiles\n")
+    f.close()
+    exit()
+
+
     if use_prints['write_to_type']:
         print(f"                            {tile_type}     Wire to node    {cover_method}")
 
@@ -244,7 +256,7 @@ def write_wire_to_node(
                     pattern.delta_x, pattern.delta_y,
                     pattern.node_wire_in_tile_pkey))
 
-                subgraph.items.append(pattern.wire_in_tile_pkey)
+                subgraph.items.append(wire_in_tile_pkeys_data.index_get(pattern.wire_in_tile_pkey))
                 ms_nodePattern.items.append(node_pattern_value)
 
             null_count = 0
@@ -302,7 +314,7 @@ def write_wire_to_node(
         graph_storage_schema = capnp.load('max_shared_storage.capnp')
         wire_to_nodes = graph_storage_schema.WireToNodeStorage.new_message()
 
-        # wire_in_tile_pkeys_data.write_to_capnp(wire_to_nodes.wireInTilePkeys)
+        wire_in_tile_pkeys_data.write_to_capnp(wire_to_nodes.wireInTilePkeys)
         node_patterns.write_to_capnp(
             (
                 wire_to_nodes.nodePatternDx,
@@ -499,6 +511,17 @@ def write_node_to_wires(
         output_dir, tile_type, only_pips, cover_method):
     global use_prints
 
+    matches = set()
+    for idx_1 in range(len(graph.u_to_v)):
+        for idx_2 in range(len(graph.u_to_v)):
+            if graph.u_to_v[idx_1] == graph.u_to_v[idx_2] and idx_1 != idx_2:
+                matches.add(idx_2)
+    f = open("sugraphs_match.txt", "a")
+    f.write(f"{tile_type}[N2W] Tiles with same subgraph: {len(matches)} of {len(graph.u_to_v)} tiles\n")
+    f.close()
+    exit()
+
+
     if use_prints['write_to_type']:
         if only_pips:
             print(f"                        {tile_type}     Node to wires (only pips)   {cover_method}")
@@ -560,7 +583,8 @@ def write_node_to_wires(
             for node_wire_in_tile_pkey, node_patterns in node_patterns: # these are the vs (node_patterns)
                 idx = node_wire_in_tile_pkeys_array.index(node_wire_in_tile_pkey)
                 if node_patterns_to_idx[node_patterns] is not None:
-                    subgraph.items.append(node_wire_in_tile_pkey)
+                    #subgraph.items.append(node_wire_in_tile_pkey)
+                    subgraph.items.append(node_wire_in_tile_pkeys_array.index_get(node_wire_in_tile_pkey))
                     ms_wirePattern.items.append(node_patterns_to_idx[node_patterns])
                 max_wire_pattern_idx = node_patterns_to_idx[node_patterns] if node_patterns_to_idx[node_patterns] > max_wire_pattern_idx else max_wire_pattern_idx
 
@@ -599,8 +623,8 @@ def write_node_to_wires(
 
 
         # write nodeWireInTilePkeys
-        # node_wire_in_tile_pkeys_array.write_to_capnp(
-        #     gs_node_to_wires.nodeWireInTilePkeys)
+        node_wire_in_tile_pkeys_array.write_to_capnp(
+            gs_node_to_wires.nodeWireInTilePkeys)
 
         # write wirePatternDx, wirePatternDy, wirePatternToWire
         wire_patterns.write_to_capnp(
@@ -612,7 +636,7 @@ def write_node_to_wires(
 
         # init wirePatterns list
         node_patterns_capnp = gs_node_to_wires.init(
-            'wirePatterns', len(node_patterns_data))
+            'nodePatterns', len(node_patterns_data))
         # write wirePatterns
         for node_pattern_capnp, node_pattern in zip(node_patterns_capnp,
                                                     node_patterns_data):
@@ -624,7 +648,7 @@ def write_node_to_wires(
             subgraph.write_to_capnp(subgraph_capnp)
             
         # init wire_patterns list
-        ms_wire_patterns_capnp = gs_node_to_wires.init('wirePatterns', len(ms_wirePatterns))
+        ms_wire_patterns_capnp = gs_node_to_wires.init('nodePatternsIdx', len(ms_wirePatterns))
         # write wire_patterns
         for ms_wire_pattern_capnp, ms_wire_pattern in zip(ms_wire_patterns_capnp, ms_wirePatterns):
             ms_wire_pattern.write_to_capnp(ms_wire_pattern_capnp)

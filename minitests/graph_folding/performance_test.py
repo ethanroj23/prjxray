@@ -37,7 +37,7 @@ def main():
 
     args = parser.parse_args()
 
-    graph_storage_schema = capnp.load('graph_storage.capnp')
+    graph_storage_schema = capnp.load('max_shared_storage.capnp')
 
 
 
@@ -105,6 +105,7 @@ SELECT pkey FROM wire_in_tile WHERE has_pip_from;"""):
         wire_in_tile_pkey_has_pip.add(wire_in_tile_pkey)
 
     def check_node(node_pkey, current_node_elements):
+        print(f"checking{node_pkey}")
         global max_n2w_subgraphs
         global max_w2n_subgraphs
         global max_w2np_subgraphs
@@ -188,6 +189,7 @@ SELECT pkey FROM wire_in_tile WHERE has_pip_from;"""):
     current_node_pkey = None
     current_node_elements = []
     total_ns = 0
+    counter = 0
     for tile_pkey, wire_in_tile_pkey, node_pkey in progressbar.progressbar(
             cur.execute("""
 SELECT tile_pkey, wire_in_tile_pkey, node_pkey FROM wire ORDER BY node_pkey;"""
@@ -197,16 +199,18 @@ SELECT tile_pkey, wire_in_tile_pkey, node_pkey FROM wire ORDER BY node_pkey;"""
         if current_node_pkey is None:
             current_node_pkey = node_pkey
         elif current_node_pkey != node_pkey:
-            any_errors = any_errors or check_node(
+            any_errors = check_node(#any_errors or check_node(
                 current_node_pkey, current_node_elements)
             current_node_elements = []
 
+        counter += 1
         current_node_pkey = node_pkey
+        print(current_node_pkey)
         current_node_elements.append((tile_pkey, wire_in_tile_pkey))
         total_ns += time.perf_counter_ns() - start_time
 
 
-    print(f"Total ns {total_ns}, Total minutes {total_ns/60000000000}")
+    print(f"Total ns {total_ns}, Total minutes {total_ns/60000000000}, Total wires: {counter}")
     any_errors = any_errors or check_node(
         current_node_pkey, current_node_elements)
 
@@ -217,7 +221,7 @@ SELECT tile_pkey, wire_in_tile_pkey, node_pkey FROM wire ORDER BY node_pkey;"""
     print(f"Max node to wire subgraphs({max_subgraphs_type['n2w']}): {max_n2w_subgraphs}")
     print(f"Max wire to node subgraphs({max_subgraphs_type['w2n']}): {max_w2n_subgraphs}")
     print(f"Max wire to pip node subgraphs({max_subgraphs_type['w2np']}): {max_w2np_subgraphs}")
-    assert any_errors == False
+    #assert any_errors == False
 
 
 if __name__ == "__main__":
