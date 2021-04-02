@@ -352,7 +352,7 @@ def write_node_to_wires(
         else:
             print(f"                        {tile_type}     Node to wires   {cover_method}")
 
-    if cover_method == 'max_shared':
+    if cover_method == 'greedy_set':
         node_wire_in_tile_pkeys = set()
         all_wire_patterns = set()
 
@@ -970,7 +970,8 @@ def find_duplicate_pairs(solutions):
 
     return duplicates
 
-def generate_max_shared_subgraphs(graph):
+def generate_individual_subgraphs(graph):
+    # Altering this to generate individual subgraphs
     global use_prints
     total_number_of_vs = len(graph.u_to_v[0])
     total_number_of_us = len(graph.u_to_v)
@@ -979,9 +980,9 @@ def generate_max_shared_subgraphs(graph):
 
     tile_and_tile_solutions = {}
 
-    # Find the total number of required subgraphs (Maybe use pandas here later)
+    # Find the total number of required subgraphs
     all_tiles = {}
-    for v_idx in range(total_number_of_vs): # for every column
+    for v_idx in range(total_number_of_us): # for every row
         cur_u_combination = bitarray()
         cur_tiles_in_subgraph = [] # this will represent the u's in the subgraph
         # cur_patterns_in_subgraph = {} # this will represent the v's in the subgraph
@@ -1008,11 +1009,6 @@ def generate_max_shared_subgraphs(graph):
         for tile in all_tiles:
             if tile in solution[0]:
                 all_tiles[tile].append(solution_idx)
-
-
-    if use_prints["needed_combinations"]:
-        max_shared = f"""        There are {len(all_needed_u_combinations)} needed u combinations out of a possible {possible_u_combinations} from {total_number_of_us} u's\n"""
-    #max_shared += f"        They are: {str(all_needed_u_combinations)}"
 
         print(max_shared)
 
@@ -1128,7 +1124,7 @@ def reduce_graph(args, all_edges, graph, tile_type):
 
     if args.use_ms:
         start_time = time.time()
-        ms_required_solutions, tile_and_tile_solutions = generate_max_shared_subgraphs(graph) # ESR added this for the max_shared_subgraphs
+        ms_required_solutions, tile_and_tile_solutions = generate_individual_subgraphs(graph) # ESR added this for the max_shared_subgraphs
         if use_prints["ms_runtime"]:
             print(f"Max Shared took {time.time() - start_time} seconds to run")
         #ms_required_solutions.sort()
@@ -1320,6 +1316,18 @@ def main():
     else:
         assert False
 
+    # all_the_same = True
+    # if len(graph.u_to_v):
+    #     first_bitarray = graph.u_to_v[0]
+    #     for bits in graph.u_to_v:
+    #         if bits != first_bitarray:
+    #             all_the_same = False
+    # if all_the_same:
+    #     write_this = f'[{args.tile}] All u to v patterns are the same: {len(graph.u)}\n'  
+    #     f = open("sugraphs_match.txt", "a")
+    #     f.write(write_this)
+    #     f.close()
+    #     exit()
 
     if use_prints["processing_build"]:
         print('Processing {} : {}'.format(args.database, args.tile))
@@ -1337,6 +1345,26 @@ def main():
         ms_required_solutions = set()  
         ms_tile_patterns = set()
         ms_tile_to_tile_patterns = {}
+
+
+    # distinct_patterns = set()
+    # for pattern in graph.u_to_v:
+    #     distinct_patterns.add(str(pattern))
+    # print("Getting stats about required solution")
+    # all_lookups = [len(x) for x in tile_patterns]
+    # write_this = ''
+    # write_this += f'[{args.tile}] Number of Tiles: {len(graph.u)}\n'  
+    # if (len(all_lookups)):
+    #     write_this += f'[{args.tile}] All lookups: {all_lookups}\n'  
+    #     write_this += f'[{args.tile}] Min, Max, Avg lookup: {min(all_lookups)}, {max(all_lookups)}, {sum(all_lookups)/len(all_lookups):.1f}\n'  
+    #     write_this += f'[{args.tile}] Distinct Patterns: {len(distinct_patterns)}\n'  
+
+
+    # f = open("sugraphs_match.txt", "a")
+    # f.write(write_this)
+    # f.close()
+    # exit()
+
 
     if args.wire_to_node:
         if args.use_gs:

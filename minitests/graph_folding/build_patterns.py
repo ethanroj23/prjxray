@@ -42,7 +42,7 @@ def main():
     cur = lookup.conn.cursor()
 
 
-    cur.execute("SELECT name FROM tile_type;")
+    cur.execute("SELECT name FROM tile_type ORDER BY name DESC;")
     all_tile_types = cur.fetchall()
 
     import subprocess
@@ -51,7 +51,7 @@ def main():
 
 
     for num, row in enumerate(all_tile_types):
-        for direction in ['node_to_wires_ms', 'node_to_pip_wires_ms', 'wire_to_node_ms']:
+        for direction in ['node_to_wires_gs', 'node_to_pip_wires_gs', 'wire_to_node_gs']:
             tile_type = row[0]
             print(f'\n{num}. Working on: {tile_type} {direction}')
             subprocess.check_output(['make', direction, f'TILE={tile_type}'])
